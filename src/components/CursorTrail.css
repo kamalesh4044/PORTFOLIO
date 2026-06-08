@@ -1,0 +1,40 @@
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #66fcf1;
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: screen;
+  box-shadow:
+    0 0 6px 2px rgba(102, 252, 241, 0.6),
+    0 0 16px 6px rgba(102, 252, 241, 0.3),
+    0 0 30px 10px rgba(102, 252, 241, 0.1);
+  transition: transform 0.15s ease-out, width 0.2s ease, height 0.2s ease;
+  will-change: transform;
+}
+
+.cursor-dot--hover {
+  width: 20px;
+  height: 20px;
+  box-shadow:
+    0 0 10px 4px rgba(102, 252, 241, 0.7),
+    0 0 24px 10px rgba(102, 252, 241, 0.35),
+    0 0 40px 16px rgba(102, 252, 241, 0.15);
+}
+
+.cursor-trail-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  background: #66fcf1;
+  pointer-events: none;
+  z-index: 9998;
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+  transition: opacity 0.05s linear;
+}
