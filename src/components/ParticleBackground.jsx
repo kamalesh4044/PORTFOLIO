@@ -1,187 +1,104 @@
-import { useRef, useMemo, useCallback } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { useRef, useMemo, useEffect } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import './ParticleBackground.css';
 
-const PARTICLE_COUNT = 250;
-const SPREAD = 20;
-const CURSOR_RADIUS = 3;
-const REPEL_STRENGTH = 0.6;
-const BASE_SIZE = 0.04;
-const GLOW_SIZE = 0.09;
+const PARTICLE_COUNT = 4000;
+const BASE_SPEED = 1.5; // Base drift speed
+const SCROLL_MULTIPLIER = 0.8; // How much scrolling accelerates the particles
 
-const PRIMARY = new THREE.Color('#66fcf1');
-const SECONDARY = new THREE.Color('#45a29e');
-const DIM_PRIMARY = new THREE.Color('#66fcf1').multiplyScalar(0.35);
-const DIM_SECONDARY = new THREE.Color('#45a29e').multiplyScalar(0.35);
-
-function Particles() {
-  const meshRef = useRef();
-  const lightRef = useRef();
-  const { viewport } = useThree();
-
-  const mouse3D = useRef(new THREE.Vector3(100, 100, 0));
-
-  const { basePositions, velocities, isPrimary } = useMemo(() => {
-    const bp = new Float32Array(PARTICLE_COUNT * 3);
-    const vel = new Float32Array(PARTICLE_COUNT * 3);
-    const primary = new Uint8Array(PARTICLE_COUNT);
-
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      const i3 = i * 3;
-      bp[i3] = (Math.random() - 0.5) * SPREAD;
-      bp[i3 + 1] = (Math.random() - 0.5) * SPREAD;
-      bp[i3 + 2] = (Math.random() - 0.5) * SPREAD * 0.6;
-
-      vel[i3] = (Math.random() - 0.5) * 0.003;
-      vel[i3 + 1] = (Math.random() - 0.5) * 0.003;
-      vel[i3 + 2] = (Math.random() - 0.5) * 0.002;
-
-      primary[i] = Math.random() > 0.35 ? 1 : 0;
-    }
-    return { basePositions: bp, velocities: vel, isPrimary: primary };
-  }, []);
-
-  const positions = useRef(new Float32Array(basePositions));
-
-  const dummy = useMemo(() => new THREE.Object3D(), []);
-  const colorArray = useMemo(() => new Float32Array(PARTICLE_COUNT * 3), []);
-  const tempColor = useMemo(() => new THREE.Color(), []);
-  const tempVec = useMemo(() => new THREE.Vector3(), []);
-
-  useFrame((state) => {
-    if (!meshRef.current) return;
-
-    const time = state.clock.elapsedTime;
-    const pos = positions.current;
-    const mx = mouse3D.current.x;
-    const my = mouse3D.current.y;
-
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      const i3 = i * 3;
-
-      // Drift particles slowly
-      pos[i3] += velocities[i3];
-      pos[i3 + 1] += velocities[i3 + 1];
-      pos[i3 + 2] += velocities[i3 + 2];
-
-      // Gentle sine wave motion
-      const offset = i * 0.1;
-      const px = pos[i3] + Math.sin(time * 0.3 + offset) * 0.02;
-      const py = pos[i3 + 1] + Math.cos(time * 0.25 + offset) * 0.02;
-      const pz = pos[i3 + 2];
-
-      // Wrap around boundaries
-      if (pos[i3] > SPREAD / 2) pos[i3] = -SPREAD / 2;
-      if (pos[i3] < -SPREAD / 2) pos[i3] = SPREAD / 2;
-      if (pos[i3 + 1] > SPREAD / 2) pos[i3 + 1] = -SPREAD / 2;
-      if (pos[i3 + 1] < -SPREAD / 2) pos[i3 + 1] = SPREAD / 2;
-      if (pos[i3 + 2] > SPREAD * 0.3) pos[i3 + 2] = -SPREAD * 0.3;
-      if (pos[i3 + 2] < -SPREAD * 0.3) pos[i3 + 2] = SPREAD * 0.3;
-
-      // Distance to cursor in 2D (ignore z for cursor interaction)
-      const dx = px - mx;
-      const dy = py - my;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      // Cursor repulsion
-      let finalX = px;
-      let finalY = py;
-      if (dist < CURSOR_RADIUS && dist > 0.01) {
-        const force = (1 - dist / CURSOR_RADIUS) * REPEL_STRENGTH;
-        finalX += (dx / dist) * force;
-        finalY += (dy / dist) * force;
-      }
-
-      // Scale based on proximity to cursor (glow effect)
-      const proximity = dist < CURSOR_RADIUS ? 1 - dist / CURSOR_RADIUS : 0;
-      const scale = BASE_SIZE + proximity * (GLOW_SIZE - BASE_SIZE);
-
-      dummy.position.set(finalX, finalY, pz);
-      dummy.scale.setScalar(scale);
-      dummy.updateMatrix();
-      meshRef.current.setMatrixAt(i, dummy.matrix);
-
-      // Color: brighter near cursor
-      if (isPrimary[i]) {
-        tempColor.lerpColors(DIM_PRIMARY, PRIMARY, 0.3 + proximity * 0.7);
-      } else {
-        tempColor.lerpColors(DIM_SECONDARY, SECONDARY, 0.3 + proximity * 0.7);
-      }
-      colorArray[i3] = tempColor.r;
-      colorArray[i3 + 1] = tempColor.g;
-      colorArray[i3 + 2] = tempColor.b;
-    }
-
-    meshRef.current.instanceMatrix.needsUpdate = true;
-
-    // Update instance colors
-    if (meshRef.current.instanceColor) {
-      meshRef.current.instanceColor.needsUpdate = true;
-    }
-
-    // Move point light to follow cursor
-    if (lightRef.current) {
-      lightRef.current.position.set(mx, my, 3);
-    }
+function WarpParticles() {
+  const pointsRef = useRef();
+  
+  // Track scroll velocity
+  const scrollData = useRef({
+    lastY: window.scrollY,
+    velocity: 0,
+    targetVelocity: 0
   });
 
-  // Initialize instance colors
-  const initColors = useCallback(
-    (mesh) => {
-      if (!mesh) return;
-      meshRef.current = mesh;
-      const col = new THREE.Color();
-      for (let i = 0; i < PARTICLE_COUNT; i++) {
-        col.copy(isPrimary[i] ? DIM_PRIMARY : DIM_SECONDARY);
-        mesh.setColorAt(i, col);
-      }
-      mesh.instanceColor.needsUpdate = true;
-    },
-    [isPrimary]
-  );
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      const deltaY = currentY - scrollData.current.lastY;
+      
+      // Absolute value so scrolling up OR down creates forward momentum
+      scrollData.current.targetVelocity = Math.min(Math.abs(deltaY) * SCROLL_MULTIPLIER, 100);
+      scrollData.current.lastY = currentY;
+    };
 
-  const handlePointerMove = useCallback(
-    (e) => {
-      // Convert NDC (-1 to 1) to world coordinates
-      mouse3D.current.x = (e.point?.x ?? 0) || ((e.clientX / window.innerWidth) * 2 - 1) * (viewport.width / 2);
-      mouse3D.current.y = (e.point?.y ?? 0) || (-(e.clientY / window.innerHeight) * 2 + 1) * (viewport.height / 2);
-    },
-    [viewport]
-  );
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const [positions, colors] = useMemo(() => {
+    const pos = new Float32Array(PARTICLE_COUNT * 3);
+    const col = new Float32Array(PARTICLE_COUNT * 3);
+    const color1 = new THREE.Color('#00f0ff'); // Cyan
+    const color2 = new THREE.Color('#bc13fe'); // Purple
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      // Create a hollow cylinder/tunnel distribution
+      const theta = Math.random() * 2 * Math.PI;
+      const r = 3 + Math.random() * 35; // Don't put particles dead center to avoid clipping
+      
+      pos[i * 3] = r * Math.cos(theta);
+      pos[i * 3 + 1] = r * Math.sin(theta);
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 200; // Spread along Z axis
+
+      // Mix cyan and purple randomly
+      const mixedColor = color1.clone().lerp(color2, Math.random());
+      col[i * 3] = mixedColor.r;
+      col[i * 3 + 1] = mixedColor.g;
+      col[i * 3 + 2] = mixedColor.b;
+    }
+    return [pos, col];
+  }, []);
+
+  useFrame((state, delta) => {
+    if (!pointsRef.current) return;
+
+    // Smoothly decay target velocity back to 0
+    scrollData.current.velocity += (scrollData.current.targetVelocity - scrollData.current.velocity) * 5 * delta;
+    scrollData.current.targetVelocity *= 0.9; 
+    
+    // Total speed calculation
+    const currentSpeed = (BASE_SPEED + scrollData.current.velocity) * delta * 15;
+
+    const positionsArray = pointsRef.current.geometry.attributes.position.array;
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const i3 = i * 3;
+      // Move particles towards camera (+Z)
+      positionsArray[i3 + 2] += currentSpeed;
+
+      // Wrap around to the back if it passes the camera
+      if (positionsArray[i3 + 2] > 20) {
+        positionsArray[i3 + 2] = -150;
+      }
+    }
+    
+    pointsRef.current.geometry.attributes.position.needsUpdate = true;
+    
+    // Slowly rotate the entire tunnel
+    pointsRef.current.rotation.z += delta * 0.05;
+  });
 
   return (
-    <group onPointerMove={handlePointerMove}>
-      {/* Invisible plane to capture pointer events */}
-      <mesh visible={false}>
-        <planeGeometry args={[100, 100]} />
-        <meshBasicMaterial />
-      </mesh>
-
-      <ambientLight intensity={0.15} color="#45a29e" />
-      <pointLight
-        ref={lightRef}
-        intensity={1.2}
-        distance={8}
-        color="#66fcf1"
-        position={[0, 0, 3]}
+    <points ref={pointsRef}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={PARTICLE_COUNT} array={positions} itemSize={3} />
+        <bufferAttribute attach="attributes-color" count={PARTICLE_COUNT} array={colors} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial 
+        size={0.12} 
+        vertexColors 
+        transparent 
+        opacity={0.8} 
+        sizeAttenuation={true} 
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
       />
-
-      <instancedMesh
-        ref={initColors}
-        args={[null, null, PARTICLE_COUNT]}
-        frustumCulled={false}
-      >
-        <sphereGeometry args={[1, 8, 8]} />
-        <meshStandardMaterial
-          emissive="#66fcf1"
-          emissiveIntensity={0.5}
-          toneMapped={false}
-          transparent
-          opacity={0.85}
-        />
-      </instancedMesh>
-    </group>
+    </points>
   );
 }
 
@@ -190,15 +107,14 @@ export default function ParticleBackground() {
     return (
       <div className="particle-background">
         <Canvas
-          camera={{ position: [0, 0, 10], fov: 60 }}
+          camera={{ position: [0, 0, 5], fov: 75 }}
           dpr={[1, 1.5]}
-          gl={{ antialias: false, alpha: true }}
-          style={{ background: 'transparent' }}
-          onCreated={({ gl }) => {
-            gl.setClearColor(0x000000, 0);
-          }}
+          gl={{ antialias: false, alpha: false }}
         >
-          <Particles />
+          {/* Black background with fog to fade particles in the distance */}
+          <color attach="background" args={['#050505']} />
+          <fog attach="fog" args={['#050505', 10, 100]} />
+          <WarpParticles />
         </Canvas>
       </div>
     );
