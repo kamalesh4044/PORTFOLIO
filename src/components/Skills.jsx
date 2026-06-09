@@ -22,16 +22,18 @@ const containerVariants = {
   visible: {
     transition: {
       staggerChildren: 0.05,
+      delayChildren: 0.1,
     },
   },
 };
 
 const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 20, scale: 0.8 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.4, ease: 'easeOut' },
+    scale: 1,
+    transition: { type: "spring", stiffness: 200, damping: 15 },
   },
 };
 
@@ -43,21 +45,22 @@ const Skills = () => {
           className="section-header"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.6 }}
         >
-          <h2>Skills & Technologies</h2>
+          <h2>Tech Stack</h2>
           <div className="line"></div>
+          <p className="section-subtitle">Weapons of choice for building the future.</p>
         </motion.div>
 
         {skillCategories.map((category, catIndex) => (
           <div className="skills-category" key={category.title}>
             <motion.h3
               className="category-title"
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: catIndex * 0.1 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.5, delay: 0.1 }}
             >
               {category.title}
             </motion.h3>
@@ -67,13 +70,14 @@ const Skills = () => {
               variants={containerVariants}
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true, amount: 0.1 }}
+              viewport={{ once: true, margin: "-50px" }}
             >
               {category.skills.map((skill) => (
                 <motion.div
                   className="skill-card glass"
                   key={skill}
                   variants={cardVariants}
+                  whileHover={{ y: -5, scale: 1.05, boxShadow: "0 10px 20px rgba(0, 240, 255, 0.2)" }}
                 >
                   <div className="skill-icon-wrapper">
                     <img
@@ -85,7 +89,7 @@ const Skills = () => {
                       height="48"
                     />
                   </div>
-                  <span className="skill-name">{skill}</span>
+                  <span className="skill-name" style={{ textTransform: 'capitalize' }}>{skill}</span>
                 </motion.div>
               ))}
             </motion.div>

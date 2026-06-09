@@ -4,6 +4,7 @@
   align-items: center;
   padding-top: 80px;
   position: relative;
+  overflow: hidden;
 }
 
 .hero-container {
@@ -11,6 +12,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 4rem;
   align-items: center;
+  perspective: 1500px;
 }
 
 .hero-greeting {
@@ -18,22 +20,21 @@
   font-size: 1.5rem;
   margin-bottom: 0.5rem;
   text-transform: uppercase;
-  letter-spacing: 3px;
+  letter-spacing: 4px;
   font-weight: 300;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
 }
 
 .hero-name {
-  font-size: 4.5rem;
+  font-size: 5rem;
   line-height: 1.1;
   margin-bottom: 1rem;
-}
-
-.hero-name span {
-  color: var(--secondary-color);
+  color: var(--text-main);
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
 }
 
 .hero-title {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   color: var(--text-muted);
   margin-bottom: 1.5rem;
   font-weight: 400;
@@ -44,8 +45,9 @@
 }
 
 .title-rotate {
-  color: var(--primary-color);
+  color: var(--secondary-color);
   font-weight: 600;
+  text-shadow: 0 0 15px rgba(188, 19, 254, 0.5);
 }
 
 .title-separator {
@@ -68,7 +70,7 @@
 
 .social-links {
   display: flex;
-  gap: 1rem;
+  gap: 1.2rem;
 }
 
 .social-icon {
@@ -80,82 +82,80 @@
 
 .social-icon:hover {
   color: var(--primary-color);
-  transform: translateY(-3px);
+  transform: translateY(-5px);
+  filter: drop-shadow(0 0 10px var(--primary-color));
 }
 
 .social-icon svg {
   fill: currentColor;
 }
 
+/* 3D Tilt Section */
 .hero-image-wrapper {
-  position: relative;
+  perspective: 1200px;
   display: flex;
   justify-content: center;
   align-items: center;
+  height: 600px;
 }
 
-.hero-blob {
+.hero-3d-card {
+  position: relative;
+  width: 450px;
+  height: 550px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: grab;
+}
+
+.hero-3d-card:active {
+  cursor: grabbing;
+}
+
+.hero-glow {
   position: absolute;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(102,252,241,0.15) 0%, rgba(11,12,16,0) 70%);
-  border-radius: 50%;
-  z-index: -1;
-  animation: pulse 4s infinite alternate;
-}
-
-.hero-image {
   width: 350px;
-  height: 450px;
-  border-radius: 20px;
+  height: 350px;
+  background: radial-gradient(circle, var(--primary-color) 0%, transparent 60%);
+  opacity: 0.25;
+  filter: blur(50px);
+  transform: translateZ(-80px);
+  animation: pulse-glow 4s infinite alternate ease-in-out;
+}
+
+.hero-figurine {
+  width: 100%;
+  max-width: 500px;
+  object-fit: contain;
+  filter: drop-shadow(0 30px 40px rgba(0,0,0,0.9));
+  pointer-events: none;
+}
+
+.hero-roles-3d {
+  position: absolute;
+  bottom: 5%;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
   gap: 1.5rem;
-  overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-  position: relative;
-}
-
-.hero-monogram {
-  font-size: 8rem;
-  color: var(--primary-color);
-  font-family: var(--font-heading);
-  font-weight: 800;
-  line-height: 1;
-  text-shadow: 0 0 40px rgba(102,252,241,0.3);
-}
-
-.hero-roles {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  justify-content: center;
+  pointer-events: none;
 }
 
 .role-badge {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.3rem 0.75rem;
-  background: rgba(102,252,241,0.1);
-  border: 1px solid rgba(102,252,241,0.2);
-  border-radius: 20px;
-  font-size: 0.75rem;
-  color: var(--primary-color);
-  font-weight: 600;
-}
-
-.hero-college {
-  color: var(--text-muted);
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
   font-size: 0.85rem;
-  text-align: center;
+  color: var(--text-main);
+  font-weight: 600;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
 }
 
-@keyframes pulse {
-  0% { transform: scale(0.9); opacity: 0.5; }
-  100% { transform: scale(1.1); opacity: 0.8; }
+@keyframes pulse-glow {
+  0% { transform: translateZ(-80px) scale(0.9); opacity: 0.15; }
+  100% { transform: translateZ(-80px) scale(1.1); opacity: 0.35; background: radial-gradient(circle, var(--secondary-color) 0%, transparent 60%); }
 }
 
 @media (max-width: 992px) {
@@ -177,20 +177,24 @@
   .social-links {
     justify-content: center;
   }
+  .hero-image-wrapper {
+    height: 450px;
+  }
+  .hero-3d-card {
+    width: 350px;
+    height: 450px;
+  }
 }
 
 @media (max-width: 576px) {
   .hero-name {
-    font-size: 3rem;
+    font-size: 3.5rem;
   }
-  .hero-title {
-    font-size: 0.95rem;
+  .hero-image-wrapper {
+    height: 350px;
   }
-  .hero-image {
+  .hero-3d-card {
     width: 280px;
-    height: 360px;
-  }
-  .hero-monogram {
-    font-size: 6rem;
+    height: 380px;
   }
 }

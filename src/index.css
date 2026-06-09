@@ -1,12 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600&display=swap');
 
 :root {
-  --bg-color: #0b0c10;
-  --surface-color: #1f2833;
-  --primary-color: #66fcf1;
-  --secondary-color: #45a29e;
+  --bg-color: #050505;
+  --surface-color: #111116;
+  --primary-color: #00f0ff;
+  --secondary-color: #bc13fe;
   --text-main: #ffffff;
-  --text-muted: #c5c6c7;
+  --text-muted: #888899;
   
   --font-heading: 'Outfit', sans-serif;
   --font-body: 'Inter', sans-serif;

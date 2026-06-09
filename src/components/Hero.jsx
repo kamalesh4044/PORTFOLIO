@@ -1,9 +1,58 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { ArrowRight, Gamepad2, Globe, Brain, Mail } from 'lucide-react';
+import React, { useRef } from 'react';
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { ArrowRight, Gamepad2, Brain, Mail, Code } from 'lucide-react';
+import heroImage from '../assets/nano_banana.png';
 import './Hero.css';
 
 const Hero = () => {
+  // 3D Tilt Effect using Framer Motion
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const mouseXSpring = useSpring(x, { stiffness: 150, damping: 20 });
+  const mouseYSpring = useSpring(y, { stiffness: 150, damping: 20 });
+  
+  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["15deg", "-15deg"]);
+  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-15deg", "15deg"]);
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const xPct = mouseX / width - 0.5;
+    const yPct = mouseY / height - 0.5;
+    x.set(xPct);
+    y.set(yPct);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  const name = "Kamalesh Kumar A.";
+  
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+        delayChildren: 0.3,
+      }
+    }
+  };
+
+  const wordVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { ease: "easeOut", duration: 0.8 } 
+    }
+  };
+
   return (
     <section id="home" className="hero section">
       <div className="container hero-container">
@@ -13,17 +62,32 @@ const Hero = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <h2 className="hero-greeting">Hello, I am</h2>
-          <h1 className="hero-name">Kamalesh <span>Kumar A.</span></h1>
+          <h2 className="hero-greeting">Initialize &lt;Hero /&gt;</h2>
+          <motion.h1 
+            className="hero-name"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {name.split(' ').map((word, index) => (
+              <motion.span 
+                key={index} 
+                variants={wordVariants}
+                style={{ display: "inline-block", marginRight: "1.5rem" }}
+              >
+                {word}
+              </motion.span>
+            ))}
+          </motion.h1>
           <h3 className="hero-title">
-            <span className="title-rotate">CSE Student</span>
+            <span className="title-rotate">Software Developer</span>
             <span className="title-separator">|</span>
-            <span className="title-rotate">Game Developer</span>
+            <span className="title-rotate">Web Engineer</span>
             <span className="title-separator">|</span>
-            <span className="title-rotate">AI Enthusiast</span>
+            <span className="title-rotate">AI/ML</span>
           </h3>
           <p className="hero-description">
-            Building Web, Apps, Games & AI Projects. Open to Learning and Collaboration. Currently studying at Kingston Engineering College.
+            Building immersive game worlds, high-performance web applications, and intelligent AI systems. Constantly exploring the edge of technology to bring creative ideas to life.
           </p>
           
           <div className="hero-actions">
@@ -44,23 +108,21 @@ const Hero = () => {
           </div>
         </motion.div>
         
-        <motion.div 
-          className="hero-image-wrapper"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-        >
-          <div className="hero-blob"></div>
-          <div className="hero-image glass">
-            <div className="hero-roles">
-              <div className="role-badge"><Gamepad2 size={20} /> Game Dev</div>
-              <div className="role-badge"><Globe size={20} /> Web Dev</div>
-              <div className="role-badge"><Brain size={20} /> AI</div>
+        <div className="hero-image-wrapper">
+          <motion.div 
+            className="hero-3d-card"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+          >
+            <div className="hero-glow"></div>
+            <img src={heroImage} alt="Profile Display" className="hero-figurine" style={{ transform: "translateZ(80px)" }} />
+            <div className="hero-roles-3d" style={{ transform: "translateZ(120px)" }}>
+              <div className="role-badge glass"><Code size={16} /> Web Dev</div>
+              <div className="role-badge glass"><Brain size={16} /> AI Focus</div>
             </div>
-            <span className="hero-monogram">K</span>
-            <p className="hero-college">Kingston Engineering College</p>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </div>
     </section>
   );
