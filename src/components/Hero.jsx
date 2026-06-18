@@ -1,35 +1,10 @@
-import React, { useRef } from 'react';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { ArrowRight, Gamepad2, Brain, Mail, Code } from 'lucide-react';
-import heroImage from '../assets/nano_banana.png';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { ArrowRight, Mail } from 'lucide-react';
 import './Hero.css';
 
 const Hero = () => {
-  // 3D Tilt Effect using Framer Motion
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const mouseXSpring = useSpring(x, { stiffness: 150, damping: 20 });
-  const mouseYSpring = useSpring(y, { stiffness: 150, damping: 20 });
-  
-  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["15deg", "-15deg"]);
-  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-15deg", "15deg"]);
 
-  const handleMouseMove = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    const xPct = mouseX / width - 0.5;
-    const yPct = mouseY / height - 0.5;
-    x.set(xPct);
-    y.set(yPct);
-  };
-
-  const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
-  };
 
   const name = "Kamalesh Kumar A.";
   
@@ -108,21 +83,7 @@ const Hero = () => {
           </div>
         </motion.div>
         
-        <div className="hero-image-wrapper">
-          <motion.div 
-            className="hero-3d-card"
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-            style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-          >
-            <div className="hero-glow"></div>
-            <img src={heroImage} alt="Profile Display" className="hero-figurine" style={{ transform: "translateZ(80px)" }} />
-            <div className="hero-roles-3d" style={{ transform: "translateZ(120px)" }}>
-              <div className="role-badge glass"><Code size={16} /> Web Dev</div>
-              <div className="role-badge glass"><Brain size={16} /> AI Focus</div>
-            </div>
-          </motion.div>
-        </div>
+
       </div>
     </section>
   );
